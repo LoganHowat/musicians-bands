@@ -1,15 +1,18 @@
 const {sequelize} = require('./db');
-const {Band, Musician} = require('./index')
+const {Band, Musician, Song} = require('./index')
 
 describe('Band and Musician Models', () => {
     /**
      * Runs the code prior to all tests
      */
+     Band.drop()
+     Musician.drop()
+     Song.drop()
     beforeAll(async () => {
         // the 'sync' method will create tables based on the model class
         // by setting 'force:true' the tables are recreated each time the 
-        // test suite is run
-        await sequelize.sync({ force: true });
+        // test suite is run {force:true}
+        await sequelize.sync();//remove the force:true
     })
 
     test('can create a Band', async () => {
@@ -62,7 +65,38 @@ describe('Band and Musician Models', () => {
             instrument:"Orchestra"
         });
         let updated = (await musician3).update({name:'Hans Zimmer'});
-        console.log((await musician3).dataValues.name)
         expect((await musician3).dataValues.name).toBe('Hans Zimmer');//need to put the await musician3 in brackets together
     })
+
+    test('Testing the association', async () => {
+        const foundBand = await Band.findByPk(1)
+        await foundBand.addMusician(1)
+        const BandMusician = await foundBand.getMusicians()//returns john williams as John williams was added to the beatles with the band ID of 1
+        expect((await BandMusician)[0].dataValues['name']).toBe('John Williams');//need to put the await musician3 in brackets together
+        expect((await BandMusician)[0].dataValues.id).toBe(1);
+        expect((await BandMusician)[0].dataValues.bandId).toBe(1);
+    })
+
+    test('Testing the association', async () => {
+        let band = await Band.findByPk(1)
+        Song.create({
+            title:"Yellow Submarine",
+            year:1967
+        });
+        Song.create({
+            title:"Strawberry fields",
+            year:1970
+        });
+        band.addSong(1)
+        band.addSong(2)
+        const bandsongs = await band.getSongs()//this gets the songs associated with band with id 1
+        expect((await bandsongs)[0].dataValues.id).toBe(1);
+        expect((await bandsongs)[0].dataValues.title).toBe('Yellow Submarine');
+        expect((await bandsongs)[1].dataValues.id).toBe(2);
+        expect((await bandsongs)[1].dataValues.title).toBe('Strawberry fields');
+    })
+//Need to write tests to finish up the coding rooms task
+    Band.drop()
+    Musician.drop()
+    Song.drop()
 })
