@@ -95,7 +95,23 @@ describe('Band and Musician Models', () => {
         expect((await bandsongs)[1].dataValues.id).toBe(2);
         expect((await bandsongs)[1].dataValues.title).toBe('Strawberry fields');
     })
-//Need to write tests to finish up the coding rooms task
+
+    test('Testing the association', async () => {
+        const someBandsMusicians = await Band.findAll({
+            include: [
+                { model: Musician}
+            ]
+        })
+        const someBandsSongs = await Band.findAll({
+            include: [
+                { model: Song}
+            ]
+        })
+        expect((await someBandsMusicians)[0].dataValues.musicians.length).toBe(1);//Checks that John Williams is in the Musicians property when doing the join as he is the only musician stored in Beatles
+        expect((await someBandsMusicians)[0].dataValues.musicians[0].dataValues.name).toBe('John Williams');
+        //Bottom line checks that the two beatles songs are stored within the join by checking the length of the songs array
+        expect((await someBandsSongs)[0].dataValues.songs.length).toBe(2);
+    })
     Band.drop()
     Musician.drop()
     Song.drop()
